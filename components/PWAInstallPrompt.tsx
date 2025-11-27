@@ -8,11 +8,16 @@ export function PWAInstallPrompt() {
   const [showPrompt, setShowPrompt] = useState(false)
 
   useEffect(() => {
+    console.log("[v0] PWA Install Prompt component mounted")
+
     // Check if already installed
     const isInstalled =
       window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true
 
+    console.log("[v0] PWA installed status:", isInstalled)
+
     if (isInstalled) {
+      console.log("[v0] App already installed, not showing prompt")
       return
     }
 
@@ -21,33 +26,46 @@ export function PWAInstallPrompt() {
     if (isDismissed) {
       const dismissedTime = Number.parseInt(isDismissed)
       const daysSinceDismissed = (Date.now() - dismissedTime) / (1000 * 60 * 60 * 24)
+      console.log("[v0] Days since dismissed:", daysSinceDismissed)
 
       // Show again after 7 days
       if (daysSinceDismissed < 7) {
+        console.log("[v0] Prompt dismissed less than 7 days ago")
         return
       }
     }
 
     const handler = (e: any) => {
+      console.log("[v0] beforeinstallprompt event fired!")
       e.preventDefault()
       setDeferredPrompt(e)
 
       // Show prompt after 3 seconds
       setTimeout(() => {
+        console.log("[v0] Showing install prompt")
         setShowPrompt(true)
       }, 3000)
     }
 
     window.addEventListener("beforeinstallprompt", handler)
+    console.log("[v0] beforeinstallprompt listener added")
 
-    return () => window.removeEventListener("beforeinstallprompt", handler)
+    return () => {
+      console.log("[v0] PWA component unmounting")
+      window.removeEventListener("beforeinstallprompt", handler)
+    }
   }, [])
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return
+    console.log("[v0] Install button clicked")
+    if (!deferredPrompt) {
+      console.log("[v0] No deferred prompt available")
+      return
+    }
 
     deferredPrompt.prompt()
     const { outcome } = await deferredPrompt.userChoice
+    console.log("[v0] Install outcome:", outcome)
 
     if (outcome === "accepted") {
       setShowPrompt(false)
@@ -58,6 +76,7 @@ export function PWAInstallPrompt() {
   }
 
   const handleDismiss = () => {
+    console.log("[v0] Prompt dismissed by user")
     setShowPrompt(false)
     localStorage.setItem("pwa-install-dismissed", Date.now().toString())
   }
